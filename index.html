@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>VoiceTuner</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+  <script src="helper.js" defer></script>
+  <style>
+    td {
+      vertical-align: middle;
+      min-width: 220px;
+    }
+
+    audio {
+      height: 50px;
+      width: 20vw;
+      min-width: 70px;
+      max-width: 220px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container pt-5 mt-5 shadow p-5 mb-5 bg-white rounded">
+    <div class="text-center">
+      <h1>VoiceTuner</h1>
+      <h3>Self-Supervised Pre-training and Efficient Fine-tuning For Voice Generation</h3>
+      <p>
+
+      </p>
+      <!-- <p class="fst-italic mb-0">
+          Eugene Kharitonov, Damien Vincent,  Zalán Borsos, Raphaël Marinier, Sertan Girgin, Olivier Pietquin,
+          Matt Sharifi, Marco Tagliasacchi, Neil Zeghidour
+        </p> -->
+      <!-- <p><b>Anonymous Authors</b></p> -->
+    </div>
+    <p>
+      <b>Abstract.</b>
+      Voice large language models (LLMs) cast voice synthesis as a language modeling task in a discrete space, and have demonstrated significant progress to date. Despite the recent success, the current development of voice LLMs in low-resource applications is hampered by data scarcity and high computational cost. In this work, we propose VoiceTuner, with a self-supervised pre-training and efficient fine-tuning approach for low-resource voice generation. Specifically, 1) to mitigate data scarcity, we leverage large-scale unlabeled dataset and pre-train VoiceTuner-SSL without pre-defined applications, which can be fine-tuned in downstream tasks; 2) to further reduce the high training cost in complete fine-tuning, we introduce a multiscale adapter to effectively update around only 1% parameters as a plug-and-play module; and 3) to alleviate the challenges of modeling long audio tokens inherited from inefficient attention mechanism, we introduce VoiceTuner-Mamba with multiscale state space models in place of transformers. Experimental results demonstrate that VoiceTuner-SSL presents strong acoustic continuations. VoiceTuner exhibits superior quality and style similarity in three low-resource (1h, 10h, 30h) generation tasks. Audio samples are available at <a href="http://prompt-singer.github.io">https://VoiceTuner.github.io</a> .
+
+    </p>
+  </div>
+
+  <div class="container pt-5 mt-5 shadow p-5 mb-5 bg-white rounded">
+    <h2 id="model-overview" style="text-align: center;">Model Overview</h2>
+    <div>
+      <p><br /></p>
+      <p style="text-align: center;">
+        <img src="arch.png" height="150" width="1050" class="img-fluid">
+      </p>
+      <p><br /></p>
+    </div>
+
+  </div>
+
+  <div class="container pt-5 mt-5 shadow p-5 mb-5 bg-white rounded">
+    <h2 id="tablecontents" style="text-align: left;">Table of Contents</h2>
+    <div>
+        <li><a href="#continuity" class="btn border-white bg-white fw-bold">Audio Continuity of VoiceTuner-SSL</a></li>
+        <li><a href="#finetuning" class="btn border-white bg-white fw-bold">Low-Resource Finetuning</a></li>
+    </div>
+  </div>
+
+  <div class="container shadow p-5 mb-5 bg-white rounded">
+    <h3>Audio Continuity of VoiceTuner-SSL<a id="continuity" /></h3>
+
+    <p style="margin-top: 2em">
+      In this section, we provide samples of audio continuation generation of VoiceTuner-SSL, including its ability to maintain speed, style, emotion and noisy environment.
+    </p>
+
+    <h4>Speed</h4>
+
+    <div class="container pt-3 table-responsive">
+      <table class="table table-hover" id="speed">
+        <thead>
+          <tr>
+            <th style="text-align: center">Speed</th>
+            <th style="text-align: center">Prefix</th>
+            <th style="text-align: center">Base</th>
+            <th style="text-align: center">Medium</th>
+            <th style="text-align: center">Large</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr height=100px>
+            <td style="text-align: center">slow</td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/speed/1_speed_prefix.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/speed/1_speed_base.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/speed/1_speed_medium.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/speed/1_speed_large.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+          </tr>
+          <tr height=100px>
+            <td style="text-align: center">slow</td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/speed/2_speed_prefix.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/speed/2_speed_base.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/speed/2_speed_medium.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/speed/2_speed_large.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+          </tr>
+          <tr height=100px>
+            <td style="text-align: center">normal</td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/speed/3_speed_prefix.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/speed/3_speed_base.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/speed/3_speed_medium.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/speed/3_speed_large.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+          </tr>
+          <tr height=100px>
+            <td style="text-align: center">fast</td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/speed/4_speed_prefix.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/speed/4_speed_base.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/speed/4_speed_medium.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/speed/4_speed_large.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+          </tr>
+          <tr height=100px>
+            <td style="text-align: center">fast</td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/speed/5_speed_prefix.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/speed/5_speed_base.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/speed/5_speed_medium.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/speed/5_speed_large.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+          </tr>
+
+        </tbody>
+      </table>
+    </div>
+
+    <p>&nbsp</p>
+
+    <h4>Style</h4>
+
+    <div class="container pt-3 table-responsive">
+      <table class="table table-hover" id="style">
+        <thead>
+          <tr>
+            <th style="text-align: center">Style</th>
+            <th style="text-align: center">Prefix</th>
+            <th style="text-align: center">Base</th>
+            <th style="text-align: center">Medium</th>
+            <th style="text-align: center">Large</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr height=100px>
+            <td style="text-align: center">whispering</td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/style/1_style_prefix.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/style/1_style_base.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/style/1_style_medium.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/style/1_style_large.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+          </tr>
+          <tr height=100px>
+            <td style="text-align: center">angry</td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/style/2_style_prefix.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/style/2_style_base.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/style/2_style_medium.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/style/2_style_large.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+          </tr>
+          <tr height=100px>
+            <td style="text-align: center">excited</td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/style/3_style_prefix.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/style/3_style_base.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/style/3_style_medium.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/style/3_style_large.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+          </tr>
+          <tr height=100px>
+            <td style="text-align: center">newscast formal</td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/style/4_style_prefix.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/style/4_style_base.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/style/4_style_medium.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/style/4_style_large.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+          </tr>
+          <tr height=100px>
+            <td style="text-align: center">shouting</td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/style/5_style_prefix.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/style/5_style_base.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/style/5_style_medium.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/style/5_style_large.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+          </tr>
+
+        </tbody>
+      </table>
+    </div>
+
+    <p>&nbsp</p>
+
+    <h4>Emotion</h4>
+
+    <div class="container pt-3 table-responsive">
+      <table class="table table-hover" id="style">
+        <thead>
+          <tr>
+            <th style="text-align: center">Emotion</th>
+            <th style="text-align: center">Prefix</th>
+            <th style="text-align: center">Base</th>
+            <th style="text-align: center">Medium</th>
+            <th style="text-align: center">Large</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr height=100px>
+            <td style="text-align: center">angry</td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/emotion/1_emotion_prefix.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/emotion/1_emotion_base.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/emotion/1_emotion_medium.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/emotion/1_emotion_large.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+          </tr>
+          <tr height=100px>
+            <td style="text-align: center">sad</td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/emotion/2_emotion_prefix.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/emotion/2_emotion_base.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/emotion/2_emotion_medium.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/emotion/2_emotion_large.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+          </tr>
+          <tr height=100px>
+            <td style="text-align: center">surprise</td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/emotion/3_emotion_prefix.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/emotion/3_emotion_base.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/emotion/3_emotion_medium.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/emotion/3_emotion_large.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+          </tr>
+        </tbody>
+        
+      </table>
+    </div>
+
+    <p>&nbsp</p>
+
+    <h4>Noise Conditon</h4>
+
+    <div class="container pt-3 table-responsive">
+      <table class="table table-hover" id="style">
+        <thead>
+          <tr>
+            <th style="text-align: center">Prefix</th>
+            <th style="text-align: center">Base</th>
+            <th style="text-align: center">Medium</th>
+            <th style="text-align: center">Large</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr height=100px>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/noise/1_noise_prefix.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/noise/1_noise_base.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/noise/1_noise_medium.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/noise/1_noise_large.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+          </tr>
+          <tr height=100px>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/noise/2_noise_prefix.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/noise/2_noise_base.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/noise/2_noise_medium.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/noise/2_noise_large.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+          </tr>
+          <tr height=100px>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/noise/3_noise_prefix.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/noise/3_noise_base.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/noise/3_noise_medium.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/noise/3_noise_large.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+          </tr>
+        </tbody>
+        
+      </table>
+    </div>
+
+    <p>&nbsp</p>
+    
+    
+
+  </div>
+
+  <div class="container shadow p-5 mb-5 bg-white rounded">
+    <h3>Low-Resource Finetuning<a id="finetuning" /></h3>
+
+    <p style="margin-top: 2em">
+      In this section, we provide the results of VoiceTuner on low-resource finetuning tasks, including instruction-guided tts, zero-shot tts and singing voice synthesis.
+    </p>
+
+    <p>&nbsp</p>
+
+    <h4>Instruction-Guided TTS</h4>
+
+    <div class="container pt-3 table-responsive">
+      <table class="table table-hover" id="instruct">
+        <thead>
+          <tr>
+            <th style="text-align: center">Text</th>
+            <th style="text-align: center">Instruction</th>
+            <th style="text-align: center">GT</th>
+            <th style="text-align: center">GT Voc.</th>
+            <th style="text-align: center">30h full-p</th>
+            <th style="text-align: center">30h adaptor</th>
+            <th style="text-align: center">30h full-s</th>
+            <th style="text-align: center">10h full-p</th>
+            <th style="text-align: center">10h adaptor</th>
+            <th style="text-align: center">1h full-p</th>
+            <th style="text-align: center">1h adaptor</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr height=100px>
+            <td style="text-align: center">As soon as we left Liverpool Street she produced a bag of shrimps, grasped each individual in turn firmly by the head and tail, and ate him.</td>
+            <td style="text-align: center">Please generate a slow speaking female voice.</td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/instructtts/1_gt.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/instructtts/1_gt_vocoder.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/instructtts/1_30h_ada_load.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/instructtts/1_30h_lora.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/instructtts/1_30h_ada_noload.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/instructtts/1_10h_ada_load.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/instructtts/1_10h_lora.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/instructtts/1_1h_ada_load.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/instructtts/1_1h_lora.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+          </tr>
+          <tr height=100px>
+            <td style="text-align: center">If you had taken another step, peter Rabbit, you would have stepped right on our eggs.</td>
+            <td style="text-align: center">Please help me generate a male voice with high tone and fast speaking speed.</td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/instructtts/2_gt.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/instructtts/2_gt_vocoder.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/instructtts/2_30h_ada_load.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/instructtts/2_30h_lora.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/instructtts/2_30h_ada_noload.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/instructtts/2_10h_ada_load.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/instructtts/2_10h_lora.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/instructtts/2_1h_ada_load.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/instructtts/2_1h_lora.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+          </tr>
+          <tr height=100px>
+            <td style="text-align: center">In international affairs we are a short sighted people.</td>
+            <td style="text-align: center">High pitched, normal speaking speed, low volume, man.</td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/instructtts/3_gt.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/instructtts/3_gt_vocoder.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/instructtts/3_30h_ada_load.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/instructtts/3_30h_lora.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/instructtts/3_30h_ada_noload.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/instructtts/3_10h_ada_load.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/instructtts/3_10h_lora.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/instructtts/3_1h_ada_load.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/instructtts/3_1h_lora.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+          </tr>
+          <tr height=100px>
+            <td style="text-align: center">Now he wanted to join forces with his own kind, whether those men were potential enemies or not.</td>
+            <td style="text-align: center">Talk with her unique bass.</td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/instructtts/4_gt.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/instructtts/4_gt_vocoder.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/instructtts/4_30h_ada_load.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/instructtts/4_30h_lora.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/instructtts/4_30h_ada_noload.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/instructtts/4_10h_ada_load.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/instructtts/4_10h_lora.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/instructtts/4_1h_ada_load.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/instructtts/4_1h_lora.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+          </tr>
+          <tr height=100px>
+            <td style="text-align: center">Wonder where Jill was-Jill Bayne, Fayne, Sayne-what the devil-neck hurts, darned uncomfortable seat.</td>
+            <td style="text-align: center">This woman whispered, her voice was shrilly.</td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/instructtts/5_gt.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/instructtts/5_gt_vocoder.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/instructtts/5_30h_ada_load.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/instructtts/5_30h_lora.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/instructtts/5_30h_ada_noload.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/instructtts/5_10h_ada_load.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/instructtts/5_10h_lora.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/instructtts/5_1h_ada_load.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/instructtts/5_1h_lora.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>&nbsp</p>
+
+    <h4>Zero-Shot TTS</h4>
+
+    <div class="container pt-3 table-responsive">
+      <table class="table table-hover" id="spk">
+        <thead>
+          <tr>
+            <th style="text-align: center">Text</th>
+            <th style="text-align: center">GT</th>
+            <th style="text-align: center">GT Voc.</th>
+            <th style="text-align: center">30h full-p</th>
+            <th style="text-align: center">30h adaptor</th>
+            <th style="text-align: center">10h full-p</th>
+            <th style="text-align: center">10h adaptor</th>
+            <th style="text-align: center">1h full-p</th>
+            <th style="text-align: center">1h adaptor</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr height=100px>
+            <td style="text-align: center">No candle was burning in the caravan, probably from the economy of want. The hut was lighted only by a red tinge, arising from the opening at the top of the stove, in which sparkled a peat fire.</td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/spk/1_gt.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/spk/1_gt_vocoder.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/spk/1_30h_all.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/spk/1_30h_ada.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/spk/1_10h_all.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/spk/1_10h_ada.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/spk/1_1h_all.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/spk/1_1h_ada.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+          </tr>
+          <tr height=100px>
+            <td style="text-align: center">Having lost in his old age the intellect he had never possessed in his youth, was not responsible for the calamities of his reign.</td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/spk/2_gt.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/spk/2_gt_vocoder.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/spk/2_30h_all.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/spk/2_30h_ada.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/spk/2_10h_all.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/spk/2_10h_ada.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/spk/2_1h_all.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/spk/2_1h_ada.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+          </tr>
+          <tr height=100px>
+            <td style="text-align: center">He approached the great mansion.</td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/spk/3_gt.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/spk/3_gt_vocoder.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/spk/3_30h_all.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/spk/3_30h_ada.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/spk/3_10h_all.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/spk/3_10h_ada.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/spk/3_1h_all.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/spk/3_1h_ada.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+          </tr>
+          <tr height=100px>
+            <td style="text-align: center">Behind, projecting hinges indicated a door, and in the centre of this door a square opening showed a light inside the caravan.</td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/spk/4_gt.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/spk/4_gt_vocoder.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/spk/4_30h_all.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/spk/4_30h_ada.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/spk/4_10h_all.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/spk/4_10h_ada.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/spk/4_1h_all.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/spk/4_1h_ada.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+          </tr>
+          <tr height=100px>
+            <td style="text-align: center">In those two houses neither candle nor lamp was to be seen; nor in the whole street; nor in the whole town, so far as eye could reach.</td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/spk/5_gt.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/spk/5_gt_vocoder.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/spk/5_30h_all.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/spk/5_30h_ada.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/spk/5_10h_all.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/spk/5_10h_ada.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/spk/5_1h_all.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/spk/5_1h_ada.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+          </tr>
+
+        </tbody>
+      </table>
+
+    </div>
+
+    <p>&nbsp</p>
+
+    <h4>Singing Voice Synthesis</h4>
+
+    <div class="container pt-3 table-responsive">
+      <table class="table table-hover" id="modality">
+        <thead>
+          <tr>
+            <th style="text-align: center">Text</th>
+            <th style="text-align: center">GT</th>
+            <th style="text-align: center">GT Voc.</th>
+            <th style="text-align: center">30h full-p</th>
+            <th style="text-align: center">30h adaptor</th>
+            <th style="text-align: center">10h full-p</th>
+            <th style="text-align: center">10h adaptor</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr height=100px>
+            <td style="text-align: center">不用抉择我会自动变朋友</td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/modality/3_gt.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/modality/3_gt_vocoder.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/modality/3_30h_all.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/modality/3_30h_lora.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/modality/3_10h_all.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/modality/3_10h_lora.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+          </tr>
+          <tr height=100px>
+            <td style="text-align: center">就甜蜜地忍耐繁星润湿窗台</td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/modality/1_gt.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/modality/1_gt_vocoder.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/modality/1_30h_all.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/modality/1_30h_lora.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/modality/1_10h_all.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/modality/1_10h_lora.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+          </tr>
+          <tr height=100px>
+            <td style="text-align: center">熟悉的那一条街</td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/modality/2_gt.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/modality/2_gt_vocoder.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/modality/2_30h_all.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/modality/2_30h_lora.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/modality/2_10h_all.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/modality/2_10h_lora.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+          </tr>
+          <tr height=100px>
+            <td style="text-align: center">最好在下一秒</td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/modality/4_gt.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/modality/4_gt_vocoder.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/modality/4_30h_all.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/modality/4_30h_lora.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/modality/4_10h_all.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/modality/4_10h_lora.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+          </tr>
+          <tr height=100px>
+            <td style="text-align: center">骤雨落宿命敲</td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/modality/5_gt.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/modality/5_gt_vocoder.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/modality/5_30h_all.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/modality/5_30h_lora.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/modality/5_10h_all.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/modality/5_10h_lora.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+          </tr>
+
+        </tbody>
+      </table>
+
+    </div>
+
+  </div>
+    
+
+  </div>
+
+</body>
+
+</html>
